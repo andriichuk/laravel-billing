@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace Andriichuk\LaravelBilling\Tests;
 
 use Andriichuk\LaravelBilling\BillingManager;
+use Andriichuk\LaravelBilling\Contracts\BillingDriver;
+use Andriichuk\LaravelBilling\Contracts\HandlesWebhookProbes;
 use Andriichuk\LaravelBilling\Data\Events\NormalizedEvent;
 use Andriichuk\LaravelBilling\Data\Events\SubscriptionUpdated as NormalizedSubscriptionUpdated;
 use Andriichuk\LaravelBilling\Data\WebhookRequest;
+use Andriichuk\LaravelBilling\Enums\Capability;
 use Andriichuk\LaravelBilling\Enums\SubscriptionStatus;
 use Andriichuk\LaravelBilling\Enums\WebhookStatus;
 use Andriichuk\LaravelBilling\Exceptions\RetryableProviderOperation;
@@ -23,6 +26,38 @@ use PHPUnit\Framework\Attributes\Test;
 
 final class WebhookTest extends TestCase
 {
+    #[Test]
+    public function drivers_can_handle_provider_webhook_probes_through_the_shared_route(): void
+    {
+        app(BillingManager::class)->extend('probe', static fn (): BillingDriver => new class implements BillingDriver, HandlesWebhookProbes
+        {
+            public function name(): string
+            {
+                return 'probe';
+            }
+
+            public function capabilities(): array
+            {
+                return [];
+            }
+
+            public function supports(Capability $capability): bool
+            {
+                return false;
+            }
+
+            public function handlesWebhookProbe(WebhookRequest $request): bool
+            {
+                return $request->method === 'GET' && $request->rawBody === '';
+            }
+        });
+
+        $this->get('/billing/webhooks/probe')->assertOk()->assertContent('');
+        $this->call('GET', '/billing/webhooks/probe', [], [], [], [], 'not-empty')->assertStatus(405);
+        $this->get('/billing/webhooks/fake')->assertStatus(405);
+        self::assertDatabaseCount('billing_webhook_events', 0);
+    }
+
     #[Test]
     public function signatures_are_verified_against_the_exact_raw_body_and_events_are_applied(): void
     {
@@ -57,9 +92,12 @@ final class WebhookTest extends TestCase
     {
         $body = '{"id":"evt-unknown","type":"future.event","secret":"must-not-persist"}';
         $signature = hash_hmac('sha256', $body, 'fake-secret');
+
         foreach ([1, 2] as $_) {
             $this->call('POST', '/billing/webhooks/fake', [], [], [], ['CONTENT_TYPE' => 'application/json', 'HTTP_X_BILLING_SIGNATURE' => $signature], $body)->assertNoContent();
-        } self::assertDatabaseCount('billing_webhook_events', 1);
+        }
+
+        self::assertDatabaseCount('billing_webhook_events', 1);
         $event = WebhookEvent::query()->firstOrFail();
         self::assertSame(WebhookStatus::Ignored, $event->status);
         $providerPayload = $event->payload['provider'] ?? null;
@@ -85,11 +123,13 @@ final class WebhookTest extends TestCase
             throw new RetryableProviderOperation('temporary outage');
         });
         $event = WebhookEvent::query()->create(['driver' => 'fake', 'event_key' => 'evt-retry', 'event_type' => 'subscription.updated', 'provider_resource_id' => 'sub-1', 'status' => WebhookStatus::Queued, 'attempts' => 0, 'payload' => ['provider' => [], 'normalized' => [['class' => NormalizedSubscriptionUpdated::class, 'resource_id' => 'sub-1', 'data' => []]]], 'received_at' => now()]);
+
         try {
             app(WebhookProcessor::class)->process($event);
             self::fail('Expected retryable processing to rethrow.');
         } catch (RetryableProviderOperation) {
         }
+
         $event->refresh();
         self::assertSame(WebhookStatus::Failed, $event->status);
         self::assertSame(1, $event->attempts);
