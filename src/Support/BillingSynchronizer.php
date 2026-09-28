@@ -118,19 +118,57 @@ final class BillingSynchronizer
     /** @return array<string, mixed> */
     private function customerAttributes(CustomerData $data): array
     {
-        return ['provider_customer_id' => $data->reference->id, 'name' => $data->name, 'email' => $data->email, 'trial_ends_at' => $data->trialEndsAt, 'provider_data' => $data->rawProviderData(), 'metadata' => $data->metadata];
+        return [
+            'provider_customer_id' => $data->reference->id,
+            'name' => $data->name,
+            'email' => $data->email,
+            'trial_ends_at' => $data->trialEndsAt,
+            'provider_data' => $data->rawProviderData(),
+            'metadata' => $data->metadata,
+        ];
     }
 
     /** @return array<string, mixed> */
     private function subscriptionAttributes(Model $billable, SubscriptionData $data): array
     {
-        return ['billable_type' => $billable->getMorphClass(), 'billable_id' => $this->key($billable), 'type' => $data->type, 'provider_customer_id' => $data->customerId, 'provider_product_id' => $data->productId, 'provider_price_id' => $data->priceId, 'status' => $data->status, 'quantity' => $data->quantity, 'currency' => $data->recurringAmount?->currency, 'recurring_amount' => $data->recurringAmount?->amount, 'billing_interval' => $data->billingInterval, 'billing_interval_count' => $data->billingIntervalCount, 'auto_renew' => $data->autoRenew, 'trial_ends_at' => $data->trialEndsAt, 'next_charge_at' => $data->nextChargeAt, 'ends_at' => $data->endsAt, 'paused_at' => $data->pausedAt, 'provider_data' => $data->rawProviderData(), 'metadata' => $data->metadata];
+        return [
+            'billable_type' => $billable->getMorphClass(),
+            'billable_id' => $this->key($billable),
+            'type' => $data->type,
+            'provider_customer_id' => $data->customerId,
+            'provider_product_id' => $data->productId,
+            'provider_price_id' => $data->priceId,
+            'status' => $data->status,
+            'quantity' => $data->quantity,
+            'currency' => $data->recurringAmount?->currency,
+            'recurring_amount' => $data->recurringAmount?->amount,
+            'billing_interval' => $data->billingInterval,
+            'billing_interval_count' => $data->billingIntervalCount,
+            'auto_renew' => $data->autoRenew,
+            'trial_ends_at' => $data->trialEndsAt,
+            'next_charge_at' => $data->nextChargeAt,
+            'ends_at' => $data->endsAt,
+            'paused_at' => $data->pausedAt,
+            'provider_data' => $data->rawProviderData(),
+            'metadata' => $data->metadata,
+        ];
     }
 
     /** @return array<string, mixed> */
     private function transactionAttributes(Model $billable, TransactionData $data): array
     {
-        return ['billable_type' => $billable->getMorphClass(), 'billable_id' => $this->key($billable), 'provider_subscription_id' => $data->subscriptionId, 'type' => $data->type, 'status' => $data->status, 'amount' => $data->amount?->amount, 'currency' => $data->amount?->currency, 'billed_at' => $data->billedAt, 'provider_data' => $data->rawProviderData(), 'metadata' => $data->metadata];
+        return [
+            'billable_type' => $billable->getMorphClass(),
+            'billable_id' => $this->key($billable),
+            'provider_subscription_id' => $data->subscriptionId,
+            'type' => $data->type,
+            'status' => $data->status,
+            'amount' => $data->amount?->amount,
+            'currency' => $data->amount?->currency,
+            'billed_at' => $data->billedAt,
+            'provider_data' => $data->rawProviderData(),
+            'metadata' => $data->metadata,
+        ];
     }
 
     /** @param class-string<Model> $default @return class-string<Model> */

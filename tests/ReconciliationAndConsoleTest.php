@@ -105,7 +105,10 @@ final class ReconciliationAndConsoleTest extends TestCase
         self::assertSame(1, $first->reconciled);
         self::assertSame(1, $second->unchanged);
         Event::assertDispatchedTimes(SubscriptionUpdated::class, 1);
-        Event::assertDispatched(SubscriptionUpdated::class, static fn (SubscriptionUpdated $event): bool => $event->source->providerResourceId() === 'remote-1');
+        Event::assertDispatched(
+            SubscriptionUpdated::class,
+            static fn (SubscriptionUpdated $event): bool => $event->source->providerResourceId() === 'remote-1',
+        );
 
         $forced = $service->run('fake', new ReconciliationRequest(model: 'subscription', force: true));
 
