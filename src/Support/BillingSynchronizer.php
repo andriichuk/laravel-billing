@@ -55,6 +55,7 @@ final class BillingSynchronizer
     private function modelClass(string $key, string $default): string
     {
         $class = config("billing.models.{$key}", $default);
+
         if (! is_string($class) || ! is_a($class, $default, true)) {
             throw new InvalidArgumentException("Configured billing model [{$key}] must extend {$default}.");
         }
@@ -65,6 +66,7 @@ final class BillingSynchronizer
     private function key(Model $model): string
     {
         $key = $model->getKey();
+
         if (! is_int($key) && ! is_string($key)) {
             throw new InvalidArgumentException('The billable model must be persisted.');
         }

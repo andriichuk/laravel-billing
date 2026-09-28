@@ -18,11 +18,13 @@ final class RetryWebhooksCommand extends Command
     public function handle(): int
     {
         $limit = filter_var($this->option('limit'), FILTER_VALIDATE_INT);
+
         if (! is_int($limit) || $limit < 1 || $limit > 10000) {
             $this->components->error('Limit must be between 1 and 10000.');
 
             return self::INVALID;
         }
+
         $configuredMinutes = config('billing.webhooks.stuck_after_minutes', 15);
         $minutes = is_int($configuredMinutes) ? $configuredMinutes : filter_var($configuredMinutes, FILTER_VALIDATE_INT);
         $stale = now()->subMinutes(is_int($minutes) ? $minutes : 15);
@@ -32,19 +34,28 @@ final class RetryWebhooksCommand extends Command
             });
         });
         $driver = $this->option('driver');
+
         if (is_string($driver) && $driver !== '') {
             $query->where('driver', $driver);
         }
+
         $events = $query->oldest('id')->limit($limit)->get();
+
         foreach ($events as $event) {
             $key = $event->getKey();
+
             if (! is_int($key) && ! is_string($key)) {
                 continue;
-            } if (! $this->option('dry-run')) {
+            }
+
+            if (! $this->option('dry-run')) {
                 ProcessWebhook::dispatch($key);
                 $event->forceFill(['status' => WebhookStatus::Queued, 'queued_at' => now()])->save();
-            } $this->line(($this->option('dry-run') ? 'Would retry ' : 'Retried ').$event->driver.':'.$event->event_key);
+            }
+
+            $this->line(($this->option('dry-run') ? 'Would retry ' : 'Retried ').$event->driver.':'.$event->event_key);
         }
+
         $this->components->info($events->count().' webhook(s) selected.');
 
         return self::SUCCESS;

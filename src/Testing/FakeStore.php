@@ -37,6 +37,7 @@ final class FakeStore
     public function record(string $operation, mixed $data): void
     {
         $this->requests[] = ['operation' => $operation, 'data' => $data];
+
         if (isset($this->failures[$operation])) {
             $failure = $this->failures[$operation];
             unset($this->failures[$operation]);

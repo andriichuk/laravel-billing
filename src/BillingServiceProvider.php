@@ -39,9 +39,11 @@ final class BillingServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadRoutesFrom(__DIR__.'/../routes/webhooks.php');
+
         if (! $this->app->runningInConsole()) {
             return;
         }
+
         $this->commands([ReconcileCommand::class, RetryWebhooksCommand::class, PruneWebhooksCommand::class]);
         $this->publishes([__DIR__.'/../config/billing.php' => $this->app->configPath('billing.php')], 'billing-config');
         $this->publishes([__DIR__.'/../database/migrations' => $this->app->databasePath('migrations')], 'billing-migrations');

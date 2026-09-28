@@ -25,6 +25,7 @@ abstract class DriverComplianceTestCase extends TestCase
     {
         $capabilities = $this->driver()->capabilities();
         self::assertCount(count(array_unique(array_map(static fn (Capability $capability): string => $capability->value, $capabilities))), $capabilities);
+
         foreach ($capabilities as $capability) {
             self::assertTrue($this->driver()->supports($capability));
         }

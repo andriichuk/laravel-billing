@@ -113,6 +113,7 @@ class Subscription extends Model
     public function changePlan(string $price, array $providerOptions = []): self
     {
         $driver = app(BillingManager::class)->require(Capability::PlanChanges, $this->driver);
+
         if (! $driver instanceof SupportsPlanChanges) {
             throw UnsupportedCapability::for($driver, Capability::PlanChanges);
         }
@@ -124,6 +125,7 @@ class Subscription extends Model
     public function changeQuantity(int $quantity, array $providerOptions = []): self
     {
         $driver = app(BillingManager::class)->require(Capability::QuantityChanges, $this->driver);
+
         if (! $driver instanceof SupportsQuantityChanges) {
             throw UnsupportedCapability::for($driver, Capability::QuantityChanges);
         }
@@ -148,6 +150,7 @@ class Subscription extends Model
     private function subscriptionDriver(): ManagesSubscriptions
     {
         $driver = app(BillingManager::class)->require(Capability::Subscriptions, $this->driver);
+
         if (! $driver instanceof ManagesSubscriptions) {
             throw UnsupportedCapability::for($driver, Capability::Subscriptions);
         }
@@ -158,6 +161,7 @@ class Subscription extends Model
     private function pausingDriver(): SupportsSubscriptionPausing
     {
         $driver = app(BillingManager::class)->require(Capability::SubscriptionPausing, $this->driver);
+
         if (! $driver instanceof SupportsSubscriptionPausing) {
             throw UnsupportedCapability::for($driver, Capability::SubscriptionPausing);
         }
@@ -168,6 +172,7 @@ class Subscription extends Model
     private function synchronize(SubscriptionData $data): self
     {
         $billable = $this->billable()->first();
+
         if (! $billable instanceof Model) {
             throw new \LogicException('Subscription has no billable model.');
         }

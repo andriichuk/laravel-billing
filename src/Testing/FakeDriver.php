@@ -40,8 +40,12 @@ final class FakeDriver implements BillingDriver, ManagesCustomers, ManagesSubscr
     private FakeWebhookGateway $webhooks;
 
     /** @param list<Capability>|null $capabilities */
-    public function __construct(private readonly string $driverName = 'fake', ?array $capabilities = null, string $webhookSecret = 'fake-secret', ?FakeStore $store = null)
-    {
+    public function __construct(
+        private readonly string $driverName = 'fake',
+        ?array $capabilities = null,
+        string $webhookSecret = 'fake-secret',
+        ?FakeStore $store = null
+    ) {
         $this->store = $store ?? new FakeStore;
         $this->driverCapabilities = $capabilities ?? [Capability::Customers, Capability::Subscriptions, Capability::Transactions, Capability::Webhooks, Capability::Reconciliation, Capability::SubscriptionTrials];
         $this->customers = new FakeCustomerGateway($this->store);
@@ -141,6 +145,7 @@ final class FakeDriver implements BillingDriver, ManagesCustomers, ManagesSubscr
     public function reconcile(ReconciliationRequest $request): iterable
     {
         $this->store->record('reconcile', $request);
+
         foreach ($this->store->reconciliationResults as $result) {
             yield $result;
         }

@@ -17,18 +17,22 @@ final readonly class Money implements JsonSerializable
     {
         $this->amount = self::normalizeAmount($amount);
         $currency = strtoupper(trim($currency));
+
         if (preg_match('/^[A-Z]{3}$/', $currency) !== 1) {
             throw InvalidBillingPayload::because('Currency must be a three-letter ISO 4217 code.');
         }
+
         $this->currency = $currency;
     }
 
     public static function normalizeAmount(string|int $amount): string
     {
         $value = trim((string) $amount);
+
         if (preg_match('/^-?\d+(?:\.\d+)?$/', $value) !== 1) {
             throw InvalidBillingPayload::because('Money amount must be a decimal string or integer.');
         }
+
         $negative = str_starts_with($value, '-');
         $unsigned = ltrim($value, '-');
         [$whole, $fraction] = array_pad(explode('.', $unsigned, 2), 2, '');
