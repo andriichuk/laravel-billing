@@ -20,7 +20,9 @@ use Andriichuk\LaravelBilling\ValueObjects\CustomerReference;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
-/** @mixin Model */
+/**
+ * @mixin Model
+ */
 trait Billable
 {
     public function billing(?string $driver = null): BillingDriver
@@ -28,7 +30,9 @@ trait Billable
         return app(BillingManager::class)->driver($driver);
     }
 
-    /** @return MorphMany<Customer, $this> */
+    /**
+     * @return MorphMany<Customer, $this>
+     */
     public function billingCustomers(): MorphMany
     {
         return $this->morphMany($this->billingModelClass('customer', Customer::class), 'billable');
@@ -89,7 +93,9 @@ trait Billable
         return app(BillingSynchronizer::class)->customer($this, $resolved->name(), $result);
     }
 
-    /** @return MorphMany<Subscription, $this> */
+    /**
+     * @return MorphMany<Subscription, $this>
+     */
     public function subscriptions(): MorphMany
     {
         return $this->morphMany($this->billingModelClass('subscription', Subscription::class), 'billable');
@@ -114,7 +120,9 @@ trait Billable
         return new SubscriptionBuilder($this, $type, $price);
     }
 
-    /** @return MorphMany<Transaction, $this> */
+    /**
+     * @return MorphMany<Transaction, $this>
+     */
     public function billingTransactions(): MorphMany
     {
         return $this->morphMany($this->billingModelClass('transaction', Transaction::class), 'billable');

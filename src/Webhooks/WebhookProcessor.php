@@ -131,7 +131,9 @@ final class WebhookProcessor
         }
     }
 
-    /** @param array<mixed, mixed> $item */
+    /**
+     * @param  array<mixed, mixed>  $item
+     */
     private function restoreEvent(array $item): NormalizedEvent
     {
         $class = $item['class'] ?? null;

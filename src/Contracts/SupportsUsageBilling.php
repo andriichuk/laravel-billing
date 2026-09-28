@@ -8,6 +8,8 @@ use Andriichuk\LaravelBilling\ValueObjects\SubscriptionReference;
 
 interface SupportsUsageBilling
 {
-    /** @param array<string,mixed> $providerOptions */
+    /**
+     * @param  array<string,mixed>  $providerOptions
+     */
     public function reportUsage(SubscriptionReference $subscription, int $quantity, array $providerOptions = []): void;
 }

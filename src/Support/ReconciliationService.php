@@ -124,7 +124,9 @@ final class ReconciliationService
         return $this->resolver->resolve($driver, $result->model, $result->resource);
     }
 
-    /** @param class-string<Model> $default */
+    /**
+     * @param  class-string<Model>  $default
+     */
     private function providerRow(string $key, string $default, string $providerColumn, string $driver, string $providerId): ?Model
     {
         $class = config("billing.models.{$key}", $default);

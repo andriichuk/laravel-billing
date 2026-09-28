@@ -26,10 +26,14 @@ final class SubscriptionBuilder
 
     private ?PaymentMethodReference $paymentMethod = null;
 
-    /** @var array<string,mixed> */
+    /**
+     * @var array<string,mixed>
+     */
     private array $metadata = [];
 
-    /** @var array<string,mixed> */
+    /**
+     * @var array<string,mixed>
+     */
     private array $providerOptions = [];
 
     private ?string $idempotencyKey = null;
@@ -88,7 +92,9 @@ final class SubscriptionBuilder
         return $this;
     }
 
-    /** @param array<string,mixed> $metadata */
+    /**
+     * @param  array<string,mixed>  $metadata
+     */
     public function withMetadata(array $metadata): self
     {
         $this->metadata = $metadata;
@@ -96,7 +102,9 @@ final class SubscriptionBuilder
         return $this;
     }
 
-    /** @param array<string,mixed> $options */
+    /**
+     * @param  array<string,mixed>  $options
+     */
     public function withProviderOptions(array $options): self
     {
         $this->providerOptions = $options;
@@ -143,7 +151,9 @@ final class SubscriptionBuilder
         return app(BillingSynchronizer::class)->subscription($this->billable, $driverName, $result);
     }
 
-    /** @return class-string<Subscription> */
+    /**
+     * @return class-string<Subscription>
+     */
     private function subscriptionModel(): string
     {
         $class = config('billing.models.subscription', Subscription::class);

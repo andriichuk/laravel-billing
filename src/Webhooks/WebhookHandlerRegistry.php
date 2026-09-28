@@ -31,7 +31,9 @@ use InvalidArgumentException;
 
 final class WebhookHandlerRegistry
 {
-    /** @var array<class-string<NormalizedEvent>, Closure(string, NormalizedEvent): void> */
+    /**
+     * @var array<class-string<NormalizedEvent>, Closure(string, NormalizedEvent): void>
+     */
     private array $customHandlers = [];
 
     public function __construct(
@@ -39,7 +41,10 @@ final class WebhookHandlerRegistry
         private readonly BillingSynchronizer $synchronizer,
     ) {}
 
-    /** @param class-string<NormalizedEvent> $eventClass @param Closure(string, NormalizedEvent): void $handler */
+    /**
+     * @param  class-string<NormalizedEvent>  $eventClass
+     * @param  Closure(string, NormalizedEvent): void  $handler
+     */
     public function register(string $eventClass, Closure $handler): self
     {
         $this->customHandlers[$eventClass] = $handler;
@@ -175,7 +180,10 @@ final class WebhookHandlerRegistry
         return ['billable_type' => $data['billable_type'], 'billable_id' => (string) $data['billable_id']];
     }
 
-    /** @param class-string<Model> $default @return class-string<\Illuminate\Database\Eloquent\Model> */
+    /**
+     * @param  class-string<Model>  $default
+     * @return class-string<Model>
+     */
     private function modelClass(string $key, string $default): string
     {
         $class = config("billing.models.{$key}", $default);

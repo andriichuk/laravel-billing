@@ -115,7 +115,9 @@ final class BillingSynchronizer
         }
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
     private function customerAttributes(CustomerData $data): array
     {
         return [
@@ -128,7 +130,9 @@ final class BillingSynchronizer
         ];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
     private function subscriptionAttributes(Model $billable, SubscriptionData $data): array
     {
         return [
@@ -154,7 +158,9 @@ final class BillingSynchronizer
         ];
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
     private function transactionAttributes(Model $billable, TransactionData $data): array
     {
         return [
@@ -171,7 +177,10 @@ final class BillingSynchronizer
         ];
     }
 
-    /** @param class-string<Model> $default @return class-string<Model> */
+    /**
+     * @param  class-string<Model>  $default
+     * @return class-string<Model>
+     */
     private function modelClass(string $key, string $default): string
     {
         $class = config("billing.models.{$key}", $default);

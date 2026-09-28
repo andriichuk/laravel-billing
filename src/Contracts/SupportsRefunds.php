@@ -10,6 +10,8 @@ use Andriichuk\LaravelBilling\ValueObjects\TransactionReference;
 
 interface SupportsRefunds
 {
-    /** @param array<string,mixed> $providerOptions */
+    /**
+     * @param  array<string,mixed>  $providerOptions
+     */
     public function refund(TransactionReference $transaction, ?Money $amount = null, array $providerOptions = []): TransactionData;
 }

@@ -33,7 +33,9 @@ class Transaction extends Model
         return ['status' => TransactionStatus::class, 'billed_at' => 'immutable_datetime', 'provider_data' => 'array', 'metadata' => 'array'];
     }
 
-    /** @return MorphTo<Model, $this> */
+    /**
+     * @return MorphTo<Model, $this>
+     */
     public function billable(): MorphTo
     {
         return $this->morphTo();

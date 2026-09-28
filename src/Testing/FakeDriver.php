@@ -39,7 +39,9 @@ final class FakeDriver implements BillingDriver, ManagesCustomers, ManagesSubscr
 
     private FakeWebhookGateway $webhooks;
 
-    /** @param list<Capability>|null $capabilities */
+    /**
+     * @param  list<Capability>|null  $capabilities
+     */
     public function __construct(
         private readonly string $driverName = 'fake',
         ?array $capabilities = null,
@@ -56,7 +58,9 @@ final class FakeDriver implements BillingDriver, ManagesCustomers, ManagesSubscr
 
     private FakeStore $store;
 
-    /** @var list<Capability> */
+    /**
+     * @var list<Capability>
+     */
     private array $driverCapabilities;
 
     public function name(): string
@@ -86,7 +90,9 @@ final class FakeDriver implements BillingDriver, ManagesCustomers, ManagesSubscr
         return $this;
     }
 
-    /** @return list<array{operation:string,data:mixed}> */
+    /**
+     * @return list<array{operation:string,data:mixed}>
+     */
     public function recordedRequests(): array
     {
         return $this->store->requests;

@@ -49,7 +49,9 @@ class Subscription extends Model
         return ['status' => SubscriptionStatus::class, 'billing_interval' => BillingInterval::class, 'quantity' => 'integer', 'billing_interval_count' => 'integer', 'auto_renew' => 'boolean', 'trial_ends_at' => 'immutable_datetime', 'next_charge_at' => 'immutable_datetime', 'ends_at' => 'immutable_datetime', 'paused_at' => 'immutable_datetime', 'provider_data' => 'array', 'metadata' => 'array'];
     }
 
-    /** @return MorphTo<Model, $this> */
+    /**
+     * @return MorphTo<Model, $this>
+     */
     public function billable(): MorphTo
     {
         return $this->morphTo();
@@ -109,7 +111,9 @@ class Subscription extends Model
         return $this->synchronize($driver->cancelSubscription(new SubscriptionReference($this->provider_subscription_id), $mode));
     }
 
-    /** @param array<string, mixed> $providerOptions */
+    /**
+     * @param  array<string, mixed>  $providerOptions
+     */
     public function changePlan(string $price, array $providerOptions = []): self
     {
         $driver = app(BillingManager::class)->require(Capability::PlanChanges, $this->driver);
@@ -121,7 +125,9 @@ class Subscription extends Model
         return $this->synchronize($driver->changePlan(new SubscriptionReference($this->provider_subscription_id), $price, $providerOptions));
     }
 
-    /** @param array<string, mixed> $providerOptions */
+    /**
+     * @param  array<string, mixed>  $providerOptions
+     */
     public function changeQuantity(int $quantity, array $providerOptions = []): self
     {
         $driver = app(BillingManager::class)->require(Capability::QuantityChanges, $this->driver);

@@ -9,6 +9,8 @@ use Andriichuk\LaravelBilling\Data\ReconciliationResult;
 
 interface ReconcilesResources
 {
-    /** @return iterable<ReconciliationResult> */
+    /**
+     * @return iterable<ReconciliationResult>
+     */
     public function reconcile(ReconciliationRequest $request): iterable;
 }
