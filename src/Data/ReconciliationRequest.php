@@ -6,5 +6,9 @@ namespace Andriichuk\LaravelBilling\Data;
 
 final readonly class ReconciliationRequest
 {
-    public function __construct(public ?string $model = null, public string|int|null $id = null, public bool $dryRun = false) {}
+    public function __construct(
+        public ?string $model = null,
+        public string|int|null $id = null,
+        public bool $dryRun = false
+    ) {}
 }

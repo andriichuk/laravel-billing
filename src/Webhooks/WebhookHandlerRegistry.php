@@ -36,7 +36,10 @@ final class WebhookHandlerRegistry
     /** @var array<class-string<NormalizedEvent>, Closure(string, NormalizedEvent): void> */
     private array $customHandlers = [];
 
-    public function __construct(private readonly ConnectionInterface $database, private readonly Dispatcher $events) {}
+    public function __construct(
+        private readonly ConnectionInterface $database,
+        private readonly Dispatcher $events
+    ) {}
 
     /** @param class-string<NormalizedEvent> $eventClass @param Closure(string, NormalizedEvent): void $handler */
     public function register(string $eventClass, Closure $handler): self
@@ -49,22 +52,26 @@ final class WebhookHandlerRegistry
     public function apply(string $driver, NormalizedEvent $event): void
     {
         $custom = $this->customHandlers[$event::class] ?? null;
+
         if ($custom instanceof Closure) {
             $custom($driver, $event);
 
             return;
         }
+
         $this->database->transaction(function () use ($driver, $event): void {
             if ($event instanceof CustomerCreated || $event instanceof CustomerUpdated || $event instanceof CustomerDeleted) {
                 $this->customer($driver, $event);
 
                 return;
             }
+
             if ($event instanceof SubscriptionCreated || $event instanceof NormalizedSubscriptionUpdated || $event instanceof SubscriptionCanceled || $event instanceof SubscriptionRenewalScheduled || $event instanceof SubscriptionPaymentFailed) {
                 $this->subscription($driver, $event);
 
                 return;
             }
+
             if ($event instanceof TransactionSucceeded || $event instanceof TransactionPending || $event instanceof TransactionFailed || $event instanceof TransactionRefunded || $event instanceof ChargebackOpened || $event instanceof ChargebackUpdated) {
                 $this->transaction($driver, $event);
             }
@@ -75,13 +82,16 @@ final class WebhookHandlerRegistry
     {
         $class = $this->modelClass('customer', Customer::class);
         $query = $class::query()->where('driver', $driver)->where('provider_customer_id', $event->providerResourceId())->lockForUpdate();
+
         if ($event instanceof CustomerDeleted) {
             $query->delete();
 
             return;
         }
+
         $data = $this->safeAttributes($event->data(), ['name', 'email', 'trial_ends_at', 'provider_data', 'metadata']);
         $model = $query->first();
+
         if ($model === null) {
             $data += $this->billableKeys($event->data());
             $data += ['driver' => $driver, 'provider_customer_id' => $event->providerResourceId()];
@@ -97,12 +107,15 @@ final class WebhookHandlerRegistry
         /** @var Subscription|null $model */
         $model = $class::query()->where('driver', $driver)->where('provider_subscription_id', $event->providerResourceId())->lockForUpdate()->first();
         $data = $this->safeAttributes($event->data(), ['type', 'provider_customer_id', 'provider_product_id', 'provider_price_id', 'status', 'quantity', 'currency', 'recurring_amount', 'billing_interval', 'billing_interval_count', 'auto_renew', 'trial_ends_at', 'next_charge_at', 'ends_at', 'paused_at', 'provider_data', 'metadata']);
+
         if ($event instanceof SubscriptionCanceled) {
             $data['status'] ??= SubscriptionStatus::Canceled->value;
         }
+
         if ($event instanceof SubscriptionPaymentFailed) {
             $data['status'] ??= SubscriptionStatus::PastDue->value;
         }
+
         if ($model === null) {
             $data += $this->billableKeys($event->data());
             $data += ['driver' => $driver, 'provider_subscription_id' => $event->providerResourceId(), 'type' => 'default', 'status' => SubscriptionStatus::Unknown->value, 'quantity' => 1, 'auto_renew' => true];
@@ -110,6 +123,7 @@ final class WebhookHandlerRegistry
         } else {
             $model->fill($data)->save();
         }
+
         $this->events->dispatch(new SubscriptionUpdated($model, $event));
     }
 
@@ -122,6 +136,7 @@ final class WebhookHandlerRegistry
         $data['status'] ??= match (true) {
             $event instanceof TransactionSucceeded => 'succeeded', $event instanceof TransactionPending => 'pending', $event instanceof TransactionFailed => 'failed', $event instanceof TransactionRefunded => 'refunded', $event instanceof ChargebackOpened, $event instanceof ChargebackUpdated => 'disputed', default => 'unknown'
         };
+
         if ($model === null) {
             $data += $this->billableKeys($event->data());
             $data += ['driver' => $driver, 'provider_transaction_id' => $event->providerResourceId()];
@@ -129,6 +144,7 @@ final class WebhookHandlerRegistry
         } else {
             $model->fill($data)->save();
         }
+
         $this->events->dispatch(new TransactionUpdated($model, $event));
     }
 
@@ -159,6 +175,7 @@ final class WebhookHandlerRegistry
     private function modelClass(string $key, string $default): string
     {
         $class = config("billing.models.{$key}", $default);
+
         if (! is_string($class) || ! is_a($class, $default, true)) {
             throw new InvalidArgumentException("Invalid billing model [{$key}].");
         }

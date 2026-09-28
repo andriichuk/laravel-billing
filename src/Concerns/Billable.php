@@ -49,13 +49,17 @@ trait Billable
     {
         $manager = app(BillingManager::class);
         $resolved = $manager->require(Capability::Customers, $driver);
+
         if (! $resolved instanceof ManagesCustomers) {
             throw UnsupportedCapability::for($resolved, Capability::Customers);
         }
+
         $key = $this->getKey();
+
         if (! is_int($key) && ! is_string($key)) {
             throw new \LogicException('The billable model must be persisted.');
         }
+
         $result = $resolved->createCustomer(new CreateCustomerData($this->getMorphClass(), (string) $key, $name, $email, $metadata, $providerOptions));
 
         return app(BillingSynchronizer::class)->customer($this, $resolved->name(), $result);
@@ -69,13 +73,17 @@ trait Billable
     {
         $manager = app(BillingManager::class);
         $resolved = $manager->require(Capability::Customers, $driver);
+
         if (! $resolved instanceof ManagesCustomers) {
             throw UnsupportedCapability::for($resolved, Capability::Customers);
         }
+
         $customer = $this->billingCustomer($resolved->name());
+
         if ($customer === null) {
             return $this->createBillingCustomer($resolved->name(), $name, $email, $metadata, $providerOptions);
         }
+
         $result = $resolved->updateCustomer(new CustomerReference($customer->provider_customer_id), new UpdateCustomerData($name, $email, $metadata, $providerOptions));
 
         return app(BillingSynchronizer::class)->customer($this, $resolved->name(), $result);
@@ -121,6 +129,7 @@ trait Billable
     private function billingModelClass(string $key, string $default): string
     {
         $configured = config("billing.models.{$key}", $default);
+
         if (! is_string($configured) || ! is_a($configured, $default, true)) {
             throw new \LogicException("Configured billing model [{$key}] must extend {$default}.");
         }

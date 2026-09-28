@@ -25,21 +25,30 @@ use Throwable;
 
 final class WebhookProcessor
 {
-    public function __construct(private readonly BillingManager $billing, private readonly WebhookHandlerRegistry $handlers, private readonly Dispatcher $events) {}
+    public function __construct(
+        private readonly BillingManager $billing,
+        private readonly WebhookHandlerRegistry $handlers,
+        private readonly Dispatcher $events
+    ) {}
 
     public function receive(string $driverName, WebhookRequest $request): WebhookEvent
     {
         $driver = $this->billing->require(Capability::Webhooks, $driverName);
+
         if (! $driver instanceof ProcessesWebhooks) {
             throw UnsupportedCapability::for($driver, Capability::Webhooks);
         }
+
         $driver->verifyWebhook($request);
         $parsed = $driver->parseWebhook($request);
         $class = config('billing.models.webhook_event', WebhookEvent::class);
+
         if (! is_string($class) || ! is_a($class, WebhookEvent::class, true)) {
             $class = WebhookEvent::class;
         }
+
         $normalized = array_map(fn (NormalizedEvent $event): array => ['class' => $event::class, 'resource_id' => $event->providerResourceId(), 'data' => $event->data()], $parsed->events);
+
         try {
             /** @var WebhookEvent $webhook */
             $webhook = $class::query()->create(['driver' => $driverName, 'event_key' => $parsed->eventKey, 'event_type' => $parsed->eventType, 'provider_resource_id' => $parsed->providerResourceId, 'status' => WebhookStatus::Received, 'attempts' => 0, 'payload' => ['provider' => $parsed->sanitizedPayload, 'normalized' => $normalized], 'received_at' => $request->receivedAt]);
@@ -49,22 +58,30 @@ final class WebhookProcessor
 
             return $webhook;
         }
+
         $this->events->dispatch(new WebhookReceived($webhook));
+
         try {
             $webhook->forceFill(['status' => WebhookStatus::Queued, 'queued_at' => now()])->save();
             $key = $webhook->getKey();
+
             if (! is_int($key) && ! is_string($key)) {
                 throw new \UnexpectedValueException('Persisted webhook has no scalar key.');
             }
+
             $job = new ProcessWebhook($key);
             $connection = config('billing.webhooks.connection');
+
             if (is_string($connection) && $connection !== '') {
                 $job->onConnection($connection);
             }
+
             $queue = config('billing.webhooks.queue');
+
             if (is_string($queue) && $queue !== '') {
                 $job->onQueue($queue);
             }
+
             Bus::dispatch($job);
         } catch (Throwable $exception) {
             $webhook->forceFill(['status' => WebhookStatus::Failed, 'failed_at' => now(), 'error' => mb_substr($exception->getMessage(), 0, 65535)])->save();
@@ -79,27 +96,35 @@ final class WebhookProcessor
         if (in_array($webhook->status, [WebhookStatus::Processed, WebhookStatus::Ignored], true)) {
             return;
         }
+
         $webhook->forceFill(['status' => WebhookStatus::Processing, 'attempts' => $webhook->attempts + 1, 'error' => null])->save();
+
         try {
             $payload = $webhook->payload;
             $serialized = $payload['normalized'] ?? [];
+
             if (! is_array($serialized) || $serialized === []) {
                 $webhook->forceFill(['status' => WebhookStatus::Ignored, 'processed_at' => now(), 'failed_at' => null])->save();
                 $this->events->dispatch(new WebhookIgnored($webhook));
 
                 return;
             }
+
             foreach ($serialized as $item) {
                 if (! is_array($item)) {
                     continue;
-                } $event = $this->restoreEvent($item);
+                }
+
+                $event = $this->restoreEvent($item);
                 $this->handlers->apply($webhook->driver, $event);
             }
+
             $webhook->forceFill(['status' => WebhookStatus::Processed, 'processed_at' => now(), 'failed_at' => null])->save();
             $this->events->dispatch(new WebhookProcessed($webhook));
         } catch (Throwable $exception) {
             $webhook->forceFill(['status' => WebhookStatus::Failed, 'failed_at' => now(), 'error' => mb_substr($exception->getMessage(), 0, 65535)])->save();
             $this->events->dispatch(new WebhookFailed($webhook, $exception));
+
             if ($exception instanceof RetryableProviderOperation) {
                 throw $exception;
             }
@@ -112,9 +137,11 @@ final class WebhookProcessor
         $class = $item['class'] ?? null;
         $id = $item['resource_id'] ?? null;
         $data = $item['data'] ?? [];
+
         if (! is_string($class) || ! str_starts_with($class, 'Andriichuk\\LaravelBilling\\Data\\Events\\') || ! is_a($class, NormalizedEvent::class, true) || ! is_string($id) || ! is_array($data)) {
             throw new \UnexpectedValueException('Stored normalized webhook event is invalid.');
         }
+
         /** @var NormalizedEvent $event */ $event = new $class($id, $data);
 
         return $event;

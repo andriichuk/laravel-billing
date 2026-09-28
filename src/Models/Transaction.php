@@ -42,10 +42,13 @@ class Transaction extends Model
     public function syncFromProvider(): self
     {
         $driver = app(BillingManager::class)->require(Capability::Transactions, $this->driver);
+
         if (! $driver instanceof ManagesTransactions) {
             throw UnsupportedCapability::for($driver, Capability::Transactions);
         }
+
         $billable = $this->billable()->first();
+
         if (! $billable instanceof Model) {
             throw new \LogicException('Billing transaction has no billable model.');
         }

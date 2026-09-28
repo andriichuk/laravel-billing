@@ -9,7 +9,13 @@ use DateTimeImmutable;
 final readonly class WebhookRequest
 {
     /** @param array<string,list<string>> $headers */
-    public function __construct(public string $method, public string $rawBody, public array $headers, public ?string $sourceIp, public DateTimeImmutable $receivedAt) {}
+    public function __construct(
+        public string $method,
+        public string $rawBody,
+        public array $headers,
+        public ?string $sourceIp,
+        public DateTimeImmutable $receivedAt
+    ) {}
 
     public function firstHeader(string $name): ?string
     {

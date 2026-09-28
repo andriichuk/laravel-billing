@@ -9,5 +9,8 @@ use Throwable;
 
 final readonly class WebhookFailed
 {
-    public function __construct(public WebhookEvent $webhook, public Throwable $exception) {}
+    public function __construct(
+        public WebhookEvent $webhook,
+        public Throwable $exception
+    ) {}
 }

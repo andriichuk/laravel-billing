@@ -12,5 +12,11 @@ final readonly class ParsedWebhook
      * @param  array<string, mixed>  $sanitizedPayload
      * @param  list<NormalizedEvent>  $events
      */
-    public function __construct(public string $eventKey, public string $eventType, public ?string $providerResourceId, public array $sanitizedPayload, public array $events = []) {}
+    public function __construct(
+        public string $eventKey,
+        public string $eventType,
+        public ?string $providerResourceId,
+        public array $sanitizedPayload,
+        public array $events = []
+    ) {}
 }

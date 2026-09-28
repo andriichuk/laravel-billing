@@ -9,5 +9,8 @@ use Andriichuk\LaravelBilling\Models\Transaction;
 
 final readonly class TransactionUpdated
 {
-    public function __construct(public Transaction $transaction, public NormalizedEvent $source) {}
+    public function __construct(
+        public Transaction $transaction,
+        public NormalizedEvent $source
+    ) {}
 }

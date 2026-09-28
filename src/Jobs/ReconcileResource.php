@@ -18,7 +18,10 @@ final class ReconcileResource implements ShouldBeUnique, ShouldQueue
 
     public int $uniqueFor = 900;
 
-    public function __construct(public readonly string $driver, public readonly ReconciliationRequest $request) {}
+    public function __construct(
+        public readonly string $driver,
+        public readonly ReconciliationRequest $request
+    ) {}
 
     public function uniqueId(): string
     {

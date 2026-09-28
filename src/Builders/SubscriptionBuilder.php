@@ -34,11 +34,15 @@ final class SubscriptionBuilder
 
     private ?string $idempotencyKey = null;
 
-    public function __construct(private readonly Model $billable, private readonly string $type, private readonly string $price)
-    {
+    public function __construct(
+        private readonly Model $billable,
+        private readonly string $type,
+        private readonly string $price
+    ) {
         if (! $billable->exists) {
             throw InvalidBillingPayload::because('The billable model must be persisted before subscribing.');
         }
+
         if (trim($type) === '' || trim($price) === '') {
             throw InvalidBillingPayload::because('Subscription type and price cannot be empty.');
         }
@@ -48,7 +52,9 @@ final class SubscriptionBuilder
     {
         if (trim($driver) === '') {
             throw InvalidBillingPayload::because('Driver name cannot be empty.');
-        } $this->driverName = $driver;
+        }
+
+        $this->driverName = $driver;
 
         return $this;
     }
@@ -57,7 +63,9 @@ final class SubscriptionBuilder
     {
         if ($quantity < 1) {
             throw InvalidBillingPayload::because('Subscription quantity must be at least 1.');
-        } $this->quantity = $quantity;
+        }
+
+        $this->quantity = $quantity;
 
         return $this;
     }
@@ -66,7 +74,9 @@ final class SubscriptionBuilder
     {
         if ($days < 0) {
             throw InvalidBillingPayload::because('Trial days cannot be negative.');
-        } $this->trialDays = $days;
+        }
+
+        $this->trialDays = $days;
 
         return $this;
     }
@@ -105,21 +115,28 @@ final class SubscriptionBuilder
     {
         $manager = app(BillingManager::class);
         $driver = $manager->require(Capability::Subscriptions, $this->driverName);
+
         if (! $driver instanceof ManagesSubscriptions) {
             throw UnsupportedCapability::for($driver, Capability::Subscriptions);
         }
+
         if ($this->trialDays !== null && ! $driver->supports(Capability::SubscriptionTrials)) {
             throw UnsupportedCapability::for($driver, Capability::SubscriptionTrials);
         }
+
         $key = $this->billable->getKey();
+
         if (! is_int($key) && ! is_string($key)) {
             throw InvalidBillingPayload::because('The billable model must have a scalar key.');
         }
+
         $driverName = $driver->name();
         $existing = $this->billable->morphMany($this->subscriptionModel(), 'billable')->where('driver', $driverName)->where('type', $this->type)->first();
+
         if ($existing !== null) {
             throw InvalidBillingPayload::because("A [{$this->type}] subscription already exists for driver [{$driverName}].");
         }
+
         $customer = method_exists($this->billable, 'billingCustomer') ? $this->billable->billingCustomer($driverName) : null;
         $result = $driver->createSubscription(new CreateSubscriptionData($this->billable->getMorphClass(), (string) $key, $this->type, $this->price, $this->quantity, $this->trialDays, $customer === null ? null : new CustomerReference((string) $customer->provider_customer_id), $this->paymentMethod, $this->metadata, $this->providerOptions, $this->idempotencyKey));
 
@@ -130,6 +147,7 @@ final class SubscriptionBuilder
     private function subscriptionModel(): string
     {
         $class = config('billing.models.subscription', Subscription::class);
+
         if (! is_string($class) || ! is_a($class, Subscription::class, true)) {
             throw new \LogicException('Configured subscription model must extend '.Subscription::class.'.');
         }

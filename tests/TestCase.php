@@ -40,6 +40,7 @@ abstract class TestCase extends Orchestra
     protected function artisanCommand(string $command, array $parameters = []): PendingCommand
     {
         $pending = $this->artisan($command, $parameters);
+
         if (is_int($pending)) {
             throw new RuntimeException("Artisan command [{$command}] ran without a pending command instance.");
         }

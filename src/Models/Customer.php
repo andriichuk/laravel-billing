@@ -43,10 +43,13 @@ class Customer extends Model
     public function syncFromProvider(): self
     {
         $driver = app(BillingManager::class)->require(Capability::Customers, $this->driver);
+
         if (! $driver instanceof ManagesCustomers) {
             throw UnsupportedCapability::for($driver, Capability::Customers);
         }
+
         $billable = $this->billable()->first();
+
         if (! $billable instanceof Model) {
             throw new \LogicException('Billing customer has no billable model.');
         }

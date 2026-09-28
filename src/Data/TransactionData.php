@@ -15,7 +15,16 @@ final readonly class TransactionData
      * @param  array<string, mixed>  $providerData
      * @param  array<string, mixed>  $metadata
      */
-    public function __construct(public TransactionReference $reference, public TransactionStatus $status, public ?string $subscriptionId = null, public ?string $type = null, public ?Money $amount = null, public ?DateTimeImmutable $billedAt = null, private array $providerData = [], public array $metadata = []) {}
+    public function __construct(
+        public TransactionReference $reference,
+        public TransactionStatus $status,
+        public ?string $subscriptionId = null,
+        public ?string $type = null,
+        public ?Money $amount = null,
+        public ?DateTimeImmutable $billedAt = null,
+        private array $providerData = [],
+        public array $metadata = []
+    ) {}
 
     /** @return array<string,mixed> */
     public function rawProviderData(): array
