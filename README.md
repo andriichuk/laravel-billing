@@ -192,6 +192,8 @@ Drivers must remove authorization headers, signature secrets, PANs, CVVs, and se
 
 ```bash
 composer install
+composer format
+composer format:test
 composer test
 composer analyse
 composer check

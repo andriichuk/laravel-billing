@@ -22,5 +22,4 @@ jobs:
         with:
           dependency-versions: highest
       - run: composer validate --strict --no-check-publish
-      - run: composer test
-      - run: composer analyse
+      - run: composer check

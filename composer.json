@@ -24,6 +24,7 @@
     },
     "require-dev": {
         "larastan/larastan": "^3.0",
+        "laravel/pint": "^1.0",
         "orchestra/testbench": "^11.0",
         "phpunit/phpunit": "^12.0"
     },
@@ -34,9 +35,11 @@
         "laravel": {"providers": ["Andriichuk\\LaravelBilling\\BillingServiceProvider"]}
     },
     "scripts": {
+        "format": "pint",
+        "format:test": "pint --test",
         "test": "phpunit",
         "analyse": "phpstan analyse --debug --no-progress --memory-limit=1G",
-        "check": ["@test", "@analyse"]
+        "check": ["@format:test", "@test", "@analyse"]
     },
     "config": {"allow-plugins": {}, "sort-packages": true},
     "minimum-stability": "dev",

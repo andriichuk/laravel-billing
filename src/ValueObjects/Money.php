@@ -10,6 +10,7 @@ use JsonSerializable;
 final readonly class Money implements JsonSerializable
 {
     public string $amount;
+
     public string $currency;
 
     public function __construct(string|int $amount, string $currency)
@@ -35,10 +36,18 @@ final readonly class Money implements JsonSerializable
         $normalized = ltrim($whole, '0');
         $normalized = $normalized === '' ? '0' : $normalized;
         $normalized .= $fraction === '' ? '' : '.'.$fraction;
+
         return $negative && $normalized !== '0' ? '-'.$normalized : $normalized;
     }
 
-    public function equals(self $other): bool { return $this->amount === $other->amount && $this->currency === $other->currency; }
+    public function equals(self $other): bool
+    {
+        return $this->amount === $other->amount && $this->currency === $other->currency;
+    }
+
     /** @return array{amount: string, currency: string} */
-    public function jsonSerialize(): array { return ['amount' => $this->amount, 'currency' => $this->currency]; }
+    public function jsonSerialize(): array
+    {
+        return ['amount' => $this->amount, 'currency' => $this->currency];
+    }
 }
