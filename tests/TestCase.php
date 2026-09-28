@@ -36,7 +36,9 @@ abstract class TestCase extends Orchestra
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
     }
 
-    /** @param array<string, mixed> $parameters */
+    /**
+     * @param  array<string, mixed>  $parameters
+     */
     protected function artisanCommand(string $command, array $parameters = []): PendingCommand
     {
         $pending = $this->artisan($command, $parameters);

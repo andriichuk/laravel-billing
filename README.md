@@ -162,9 +162,24 @@ php artisan billing:reconcile --driver=acme
 php artisan billing:reconcile --model=subscription
 php artisan billing:reconcile --model=subscription --id=123
 php artisan billing:reconcile --driver=acme --dry-run
+php artisan billing:reconcile --driver=acme --cursor=123 --page-size=250
+php artisan billing:reconcile --driver=acme --since="2026-09-01T00:00:00Z"
+php artisan billing:reconcile --model=subscription --id=123 --force
 ```
 
-Drivers implement `ReconcilesResources` and return normalized reconciliation results. The core owns selection, validation, reporting, and local synchronization.
+Drivers implement `ReconcilesResources` and stream normalized provider resources. A model without an ID requests a sweep; a model and ID request one resource. `since` is provider-dependent, while `cursor` and `pageSize` let scheduled jobs resume bounded pages.
+
+The core resolves a resource's billable from the matching local provider-ID row. For a provider resource that has never been seen locally, bind `ResolvesReconciliationBillables` in the application and map provider data to a persisted model:
+
+```php
+use Andriichuk\LaravelBilling\Contracts\ResolvesReconciliationBillables;
+
+$this->app->bind(ResolvesReconciliationBillables::class, AccountBillingResolver::class);
+```
+
+The resolver receives the driver name, model kind, and resource DTO. Return `null` when it cannot resolve the owner; reconciliation reports and skips that orphan without failing the sweep.
+
+Subscription and transaction lifecycle events are emitted through the same synchronizer used by webhook projections. They include the persisted billing model and provider resource identity, so listeners can re-read authoritative state under their own lock. Events are dispatched only when projection attributes changed; `--force` explicitly replays them. `--dry-run` performs the same comparison but writes and dispatches nothing.
 
 ## Events
 

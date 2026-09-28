@@ -12,22 +12,34 @@ use Throwable;
 
 final class FakeStore
 {
-    /** @var array<string,CustomerData> */
+    /**
+     * @var array<string,CustomerData>
+     */
     public array $customers = [];
 
-    /** @var array<string,SubscriptionData> */
+    /**
+     * @var array<string,SubscriptionData>
+     */
     public array $subscriptions = [];
 
-    /** @var array<string,TransactionData> */
+    /**
+     * @var array<string,TransactionData>
+     */
     public array $transactions = [];
 
-    /** @var list<array{operation:string,data:mixed}> */
+    /**
+     * @var list<array{operation:string,data:mixed}>
+     */
     public array $requests = [];
 
-    /** @var list<ReconciliationResult> */
+    /**
+     * @var list<ReconciliationResult>
+     */
     public array $reconciliationResults = [];
 
-    /** @var array<string,Throwable> */
+    /**
+     * @var array<string,Throwable>
+     */
     public array $failures = [];
 
     public int $customerSequence = 0;

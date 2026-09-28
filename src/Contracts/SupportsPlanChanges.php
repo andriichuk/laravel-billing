@@ -9,6 +9,8 @@ use Andriichuk\LaravelBilling\ValueObjects\SubscriptionReference;
 
 interface SupportsPlanChanges
 {
-    /** @param array<string,mixed> $providerOptions */
+    /**
+     * @param  array<string,mixed>  $providerOptions
+     */
     public function changePlan(SubscriptionReference $subscription, string $price, array $providerOptions = []): SubscriptionData;
 }

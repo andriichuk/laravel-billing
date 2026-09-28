@@ -49,7 +49,9 @@ final readonly class Money implements JsonSerializable
         return $this->amount === $other->amount && $this->currency === $other->currency;
     }
 
-    /** @return array{amount: string, currency: string} */
+    /**
+     * @return array{amount: string, currency: string}
+     */
     public function jsonSerialize(): array
     {
         return ['amount' => $this->amount, 'currency' => $this->currency];

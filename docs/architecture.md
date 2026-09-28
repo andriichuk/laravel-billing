@@ -12,10 +12,12 @@ Remote HTTP work happens before local locking. Projection updates use unique con
 2. `BillingDriver` describes identity and capabilities only.
 3. Small contracts expose customer, subscription, transaction, webhook, and reconciliation operations.
 4. Immutable command/result DTOs cross the core-driver boundary.
-5. `BillingSynchronizer` updates configurable local Eloquent models.
+5. `BillingSynchronizer` updates configurable local Eloquent models and change-gates lifecycle events shared by webhooks and reconciliation.
 6. `Billable` and `SubscriptionBuilder` provide the application API.
 7. The webhook ledger authenticates, deduplicates, queues, applies, and audits provider events.
 8. Reconciliation repairs drift from provider-authoritative DTOs.
+
+Reconciliation ownership is a core concern. Existing `billing_customers`, `billing_subscriptions`, and `billing_transactions` rows map provider IDs back to billables. An application resolver handles never-before-seen provider resources because only the application knows conventions such as an account ID embedded in provider metadata. Unresolvable orphans are reported and skipped so one bad resource cannot abort a sweep.
 
 ## Stable normalized concepts
 

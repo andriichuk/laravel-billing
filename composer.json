@@ -31,7 +31,7 @@
     "autoload": {"psr-4": {"Andriichuk\\LaravelBilling\\": "src/"}},
     "autoload-dev": {"psr-4": {"Andriichuk\\LaravelBilling\\Tests\\": "tests/"}},
     "extra": {
-        "branch-alias": {"dev-main": "0.1.x-dev"},
+        "branch-alias": {"dev-main": "0.2.x-dev"},
         "laravel": {"providers": ["Andriichuk\\LaravelBilling\\BillingServiceProvider"]}
     },
     "scripts": {

@@ -6,25 +6,30 @@ namespace Andriichuk\LaravelBilling\Support;
 
 use Andriichuk\LaravelBilling\BillingManager;
 use Andriichuk\LaravelBilling\Contracts\ReconcilesResources;
+use Andriichuk\LaravelBilling\Contracts\ResolvesReconciliationBillables;
 use Andriichuk\LaravelBilling\Data\CustomerData;
 use Andriichuk\LaravelBilling\Data\ReconciliationRequest;
 use Andriichuk\LaravelBilling\Data\ReconciliationResult;
+use Andriichuk\LaravelBilling\Data\ReconciliationSummary;
 use Andriichuk\LaravelBilling\Data\SubscriptionData;
 use Andriichuk\LaravelBilling\Data\TransactionData;
 use Andriichuk\LaravelBilling\Enums\Capability;
-use Andriichuk\LaravelBilling\Exceptions\BillingResourceNotFound;
 use Andriichuk\LaravelBilling\Exceptions\UnsupportedCapability;
+use Andriichuk\LaravelBilling\Models\Customer;
+use Andriichuk\LaravelBilling\Models\Subscription;
+use Andriichuk\LaravelBilling\Models\Transaction;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\Relation;
+use InvalidArgumentException;
 
 final class ReconciliationService
 {
     public function __construct(
         private readonly BillingManager $billing,
-        private readonly BillingSynchronizer $synchronizer
+        private readonly BillingSynchronizer $synchronizer,
+        private readonly ResolvesReconciliationBillables $resolver,
     ) {}
 
-    public function run(string $driverName, ReconciliationRequest $request, ?callable $reporter = null): int
+    public function run(string $driverName, ReconciliationRequest $request, ?callable $reporter = null): ReconciliationSummary
     {
         $driver = $this->billing->require(Capability::Reconciliation, $driverName);
 
@@ -32,51 +37,104 @@ final class ReconciliationService
             throw UnsupportedCapability::for($driver, Capability::Reconciliation);
         }
 
-        $count = 0;
+        $reconciled = 0;
+        $unchanged = 0;
+        $skipped = 0;
 
         foreach ($driver->reconcile($request) as $result) {
             if ($request->model !== null && $request->model !== $result->model) {
                 continue;
             }
 
+            if ($request->id !== null && (string) $request->id !== $result->resource->reference->id) {
+                continue;
+            }
+
+            $billable = $this->billable($driverName, $result);
+
+            if ($billable === null) {
+                $processed = $result->skipped(sprintf(
+                    'No billable could be resolved for %s [%s].',
+                    $result->model,
+                    $result->resource->reference->id,
+                ));
+                $skipped++;
+
+                if ($reporter !== null) {
+                    call_user_func($reporter, $processed, $request->dryRun);
+                }
+
+                continue;
+            }
+
+            $changed = $request->dryRun
+                ? $this->wouldChange($billable, $driverName, $result)
+                : $this->apply($billable, $driverName, $result, $request->force);
+            $processed = $result->processed($changed);
+
+            if ($changed) {
+                $reconciled++;
+            } else {
+                $unchanged++;
+            }
+
             if ($reporter !== null) {
-                call_user_func($reporter, $result, $request->dryRun);
+                call_user_func($reporter, $processed, $request->dryRun);
             }
-
-            if (! $request->dryRun) {
-                $this->apply($driverName, $result);
-            }
-
-            $count++;
         }
 
-        return $count;
+        return new ReconciliationSummary($reconciled, $unchanged, $skipped);
     }
 
-    private function apply(string $driver, ReconciliationResult $result): void
+    private function apply(Model $billable, string $driver, ReconciliationResult $result, bool $force): bool
     {
-        $billable = $this->billable($result);
-        match (true) {
+        $model = match (true) {
             $result->resource instanceof CustomerData => $this->synchronizer->customer($billable, $driver, $result->resource),
-            $result->resource instanceof SubscriptionData => $this->synchronizer->subscription($billable, $driver, $result->resource),
-            $result->resource instanceof TransactionData => $this->synchronizer->transaction($billable, $driver, $result->resource),
+            $result->resource instanceof SubscriptionData => $this->synchronizer->subscription($billable, $driver, $result->resource, force: $force),
+            $result->resource instanceof TransactionData => $this->synchronizer->transaction($billable, $driver, $result->resource, force: $force),
+        };
+
+        return $model->wasRecentlyCreated || $model->wasChanged();
+    }
+
+    private function wouldChange(Model $billable, string $driver, ReconciliationResult $result): bool
+    {
+        return match (true) {
+            $result->resource instanceof CustomerData => $this->synchronizer->customerWouldChange($billable, $driver, $result->resource),
+            $result->resource instanceof SubscriptionData => $this->synchronizer->subscriptionWouldChange($billable, $driver, $result->resource),
+            $result->resource instanceof TransactionData => $this->synchronizer->transactionWouldChange($billable, $driver, $result->resource),
         };
     }
 
-    private function billable(ReconciliationResult $result): Model
+    private function billable(string $driver, ReconciliationResult $result): ?Model
     {
-        if ($result->billableType === null || $result->billableId === null) {
-            throw new BillingResourceNotFound('Reconciliation result must identify its billable model.');
+        $row = match ($result->model) {
+            'customer' => $this->providerRow('customer', Customer::class, 'provider_customer_id', $driver, $result->resource->reference->id),
+            'subscription' => $this->providerRow('subscription', Subscription::class, 'provider_subscription_id', $driver, $result->resource->reference->id),
+            'transaction' => $this->providerRow('transaction', Transaction::class, 'provider_transaction_id', $driver, $result->resource->reference->id),
+            default => null,
+        };
+
+        if ($row instanceof Customer || $row instanceof Subscription || $row instanceof Transaction) {
+            $billable = $row->billable()->first();
+
+            return $billable instanceof Model ? $billable : null;
         }
 
-        $class = Relation::getMorphedModel($result->billableType) ?? $result->billableType;
+        return $this->resolver->resolve($driver, $result->model, $result->resource);
+    }
 
-        if (! is_a($class, Model::class, true)) {
-            throw new BillingResourceNotFound("Billable model [{$result->billableType}] is invalid.");
+    /**
+     * @param  class-string<Model>  $default
+     */
+    private function providerRow(string $key, string $default, string $providerColumn, string $driver, string $providerId): ?Model
+    {
+        $class = config("billing.models.{$key}", $default);
+
+        if (! is_string($class) || ! is_a($class, $default, true)) {
+            throw new InvalidArgumentException("Configured billing model [{$key}] must extend {$default}.");
         }
 
-        /** @var Model|null $model */ $model = $class::query()->find($result->billableId);
-
-        return $model ?? throw new BillingResourceNotFound("Billable [{$result->billableType}:{$result->billableId}] was not found.");
+        return $class::query()->where('driver', $driver)->where($providerColumn, $providerId)->first();
     }
 }

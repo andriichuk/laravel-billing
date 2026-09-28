@@ -10,7 +10,9 @@ interface BillingDriver
 {
     public function name(): string;
 
-    /** @return list<Capability> */
+    /**
+     * @return list<Capability>
+     */
     public function capabilities(): array;
 
     public function supports(Capability $capability): bool;

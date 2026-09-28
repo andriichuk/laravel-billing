@@ -6,6 +6,8 @@ namespace Andriichuk\LaravelBilling\Contracts;
 
 interface SupportsHostedCheckout
 {
-    /** @param array<string,mixed> $options */
+    /**
+     * @param  array<string,mixed>  $options
+     */
     public function hostedCheckoutUrl(array $options): string;
 }

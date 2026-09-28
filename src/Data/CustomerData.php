@@ -22,7 +22,9 @@ final readonly class CustomerData
         public array $metadata = []
     ) {}
 
-    /** @return array<string,mixed> */
+    /**
+     * @return array<string,mixed>
+     */
     public function rawProviderData(): array
     {
         return $this->providerData;

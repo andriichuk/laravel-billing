@@ -13,15 +13,21 @@ use InvalidArgumentException;
 
 final class BillingManager
 {
-    /** @var array<string, Closure(Container, array<string,mixed>): BillingDriver> */
+    /**
+     * @var array<string, Closure(Container, array<string,mixed>): BillingDriver>
+     */
     private array $extensions = [];
 
-    /** @var array<string, BillingDriver> */
+    /**
+     * @var array<string, BillingDriver>
+     */
     private array $drivers = [];
 
     public function __construct(private readonly Container $container) {}
 
-    /** @param Closure(Container, array<string,mixed>): BillingDriver $resolver */
+    /**
+     * @param  Closure(Container, array<string,mixed>): BillingDriver  $resolver
+     */
     public function extend(string $name, Closure $resolver): self
     {
         $this->extensions[$name] = $resolver;
@@ -70,13 +76,17 @@ final class BillingManager
         $this->drivers = [];
     }
 
-    /** @return list<string> */
+    /**
+     * @return list<string>
+     */
     public function registeredDrivers(): array
     {
         return array_keys($this->extensions);
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * @return array<string, mixed>
+     */
     private function driverConfig(string $name): array
     {
         $configured = $this->container->make('config')->get("billing.drivers.{$name}", []);
