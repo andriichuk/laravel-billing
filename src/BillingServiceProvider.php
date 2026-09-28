@@ -7,7 +7,9 @@ namespace Andriichuk\LaravelBilling;
 use Andriichuk\LaravelBilling\Console\PruneWebhooksCommand;
 use Andriichuk\LaravelBilling\Console\ReconcileCommand;
 use Andriichuk\LaravelBilling\Console\RetryWebhooksCommand;
+use Andriichuk\LaravelBilling\Contracts\ResolvesReconciliationBillables;
 use Andriichuk\LaravelBilling\Support\BillingSynchronizer;
+use Andriichuk\LaravelBilling\Support\NullReconciliationBillableResolver;
 use Andriichuk\LaravelBilling\Support\ReconciliationService;
 use Andriichuk\LaravelBilling\Testing\FakeDriver;
 use Andriichuk\LaravelBilling\Webhooks\WebhookHandlerRegistry;
@@ -31,6 +33,7 @@ final class BillingServiceProvider extends ServiceProvider
             return $manager;
         });
         $this->app->alias(BillingManager::class, 'billing');
+        $this->app->bindIf(ResolvesReconciliationBillables::class, NullReconciliationBillableResolver::class);
         $this->app->singleton(BillingSynchronizer::class);
         $this->app->singleton(ReconciliationService::class);
         $this->app->singleton(WebhookHandlerRegistry::class);

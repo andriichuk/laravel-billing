@@ -20,13 +20,11 @@ use Andriichuk\LaravelBilling\Data\Events\TransactionPending;
 use Andriichuk\LaravelBilling\Data\Events\TransactionRefunded;
 use Andriichuk\LaravelBilling\Data\Events\TransactionSucceeded;
 use Andriichuk\LaravelBilling\Enums\SubscriptionStatus;
-use Andriichuk\LaravelBilling\Events\SubscriptionUpdated;
-use Andriichuk\LaravelBilling\Events\TransactionUpdated;
 use Andriichuk\LaravelBilling\Models\Customer;
 use Andriichuk\LaravelBilling\Models\Subscription;
 use Andriichuk\LaravelBilling\Models\Transaction;
+use Andriichuk\LaravelBilling\Support\BillingSynchronizer;
 use Closure;
-use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Database\ConnectionInterface;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
@@ -38,7 +36,7 @@ final class WebhookHandlerRegistry
 
     public function __construct(
         private readonly ConnectionInterface $database,
-        private readonly Dispatcher $events
+        private readonly BillingSynchronizer $synchronizer,
     ) {}
 
     /** @param class-string<NormalizedEvent> $eventClass @param Closure(string, NormalizedEvent): void $handler */
@@ -120,11 +118,14 @@ final class WebhookHandlerRegistry
             $data += $this->billableKeys($event->data());
             $data += ['driver' => $driver, 'provider_subscription_id' => $event->providerResourceId(), 'type' => 'default', 'status' => SubscriptionStatus::Unknown->value, 'quantity' => 1, 'auto_renew' => true];
             /** @var Subscription $model */ $model = $class::query()->create($data);
+            $changed = true;
         } else {
-            $model->fill($data)->save();
+            $model->fill($data);
+            $changed = $model->isDirty();
+            $model->save();
         }
 
-        $this->events->dispatch(new SubscriptionUpdated($model, $event));
+        $this->synchronizer->subscriptionUpdated($model, $event, $changed);
     }
 
     private function transaction(string $driver, NormalizedEvent $event): void
@@ -141,11 +142,14 @@ final class WebhookHandlerRegistry
             $data += $this->billableKeys($event->data());
             $data += ['driver' => $driver, 'provider_transaction_id' => $event->providerResourceId()];
             /** @var Transaction $model */ $model = $class::query()->create($data);
+            $changed = true;
         } else {
-            $model->fill($data)->save();
+            $model->fill($data);
+            $changed = $model->isDirty();
+            $model->save();
         }
 
-        $this->events->dispatch(new TransactionUpdated($model, $event));
+        $this->synchronizer->transactionUpdated($model, $event, $changed);
     }
 
     /**

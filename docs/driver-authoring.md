@@ -71,7 +71,9 @@ Prefer an allowlist over a denylist. Sanitization is a driver responsibility bec
 
 Use provider idempotency keys for creates and other retryable mutations. A repeated command must not create additional remote resources. Do not hold application database locks while calling the provider. Webhook normalization should be deterministic for the same event bytes.
 
-Reconciliation must return authoritative normalized resources without directly mutating core tables. Honor model and ID filters when the provider API can do so efficiently.
+Reconciliation must stream authoritative normalized resources without directly mutating core tables or resolving application models. A request with a model and ID is targeted; a model without an ID, or an empty request, is a sweep. Honor the request cursor and page size and use a provider-side `since` filter when one exists. Document providers that cannot filter by update time.
+
+Return only the model kind and normalized resource DTO in each `ReconciliationResult`. The core resolves the billable from existing provider-ID rows, then calls the application's `ResolvesReconciliationBillables` implementation for unseen resources. An unresolved resource is skipped rather than terminating the sweep.
 
 ## Compliance tests
 
