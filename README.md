@@ -2,7 +2,7 @@
 
 A vendor-agnostic subscription billing core for Laravel 13 and PHP 8.5. It provides a Cashier-like application API while keeping Stripe, Paddle, BlueSnap, and every other provider in separate driver packages.
 
-> **Stability:** This package is pre-1.0. Its contracts are intentionally being validated against the first external BlueSnap driver before a stable release. Do not publish it to Packagist yet.
+> **Stability:** This package is pre-1.0. Its contracts are intentionally being validated against the first external BlueSnap driver before a stable release. The current development release is available on [Packagist](https://packagist.org/packages/andriichuk/laravel-billing).
 
 ## Architecture
 
@@ -18,10 +18,9 @@ See [docs/architecture.md](docs/architecture.md) for the full design.
 - Laravel 13
 - A configured queue worker for production webhooks
 
-Install from the repository while the package is pre-release:
+Install the current development release from Packagist:
 
 ```bash
-composer config repositories.laravel-billing vcs https://github.com/andriichuk/laravel-billing
 composer require andriichuk/laravel-billing:dev-main
 ```
 
