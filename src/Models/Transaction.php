@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Andriichuk\LaravelBilling\Models;
 
 use Andriichuk\LaravelBilling\BillingManager;
+use Andriichuk\LaravelBilling\Concerns\ComparesJsonAttributes;
 use Andriichuk\LaravelBilling\Contracts\ManagesTransactions;
 use Andriichuk\LaravelBilling\Enums\Capability;
 use Andriichuk\LaravelBilling\Enums\TransactionStatus;
@@ -24,6 +25,8 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 class Transaction extends Model
 {
+    use ComparesJsonAttributes;
+
     protected $table = 'billing_transactions';
 
     protected $guarded = [];

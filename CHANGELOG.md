@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.2 - 2026-09-29
+
+- Compare `provider_data` and `metadata` JSON objects independently of key order, preventing unchanged MySQL reconciliations from rewriting rows or replaying lifecycle events.
+
 ## 0.2.0 - 2026-09-28
 
 - Add cursor-, page-size-, and provider-time-aware sweep reconciliation while retaining targeted model/ID reconciliation.

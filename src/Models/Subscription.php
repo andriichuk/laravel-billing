@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Andriichuk\LaravelBilling\Models;
 
 use Andriichuk\LaravelBilling\BillingManager;
+use Andriichuk\LaravelBilling\Concerns\ComparesJsonAttributes;
 use Andriichuk\LaravelBilling\Contracts\ManagesSubscriptions;
 use Andriichuk\LaravelBilling\Contracts\SupportsPlanChanges;
 use Andriichuk\LaravelBilling\Contracts\SupportsQuantityChanges;
@@ -40,6 +41,8 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 class Subscription extends Model
 {
+    use ComparesJsonAttributes;
+
     protected $table = 'billing_subscriptions';
 
     protected $guarded = [];

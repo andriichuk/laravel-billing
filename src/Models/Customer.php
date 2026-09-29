@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Andriichuk\LaravelBilling\Models;
 
 use Andriichuk\LaravelBilling\BillingManager;
+use Andriichuk\LaravelBilling\Concerns\ComparesJsonAttributes;
 use Andriichuk\LaravelBilling\Contracts\ManagesCustomers;
 use Andriichuk\LaravelBilling\Enums\Capability;
 use Andriichuk\LaravelBilling\Exceptions\UnsupportedCapability;
@@ -25,6 +26,8 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 class Customer extends Model
 {
+    use ComparesJsonAttributes;
+
     protected $table = 'billing_customers';
 
     protected $guarded = [];
